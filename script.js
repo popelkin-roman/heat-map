@@ -21,7 +21,6 @@ const drawCahrt = (data) => {
       data.monthlyVariance[data.monthlyVariance.length - 1].month);
     const minTemp = d3.min(data.monthlyVariance, d=>d.variance);
     const maxTemp = d3.max(data.monthlyVariance, d=>d.variance);
-    console.log(minTemp,maxTemp);
     const scaleYear = d3.scaleTime()
         .domain([minYear, maxYear])
         .range([paddingX, w - paddingX]);
@@ -33,6 +32,24 @@ const drawCahrt = (data) => {
         .append("svg")
         .attr("width", w)
         .attr("height", h);
+
+  const legendContainer = svg.append('g')
+    .attr('id', 'legend')
+    .attr("transform", "translate(400,0)");
+  legendContainer.selectAll('rect')
+                .data([0,1,2,3,4,5,6,7,8,9])
+                .enter()
+                .append('rect')
+                .attr('x', (d,i)=>i * 4 * width)
+                .attr('width', d=>4 * width)
+                .attr('height', d=>4 * width)
+                .style("fill", d=> color(d/10))
+
+  const colorAxis = d3.axisBottom(d3.scaleLinear().domain([baseTemp+minTemp,baseTemp+maxTemp]).range([0, 10*4*width]));
+  const colorAxisLine = svg.append("g")
+        .attr("id", "color-axis")
+        .attr("transform", `translate(${400}, ${4*width})`)
+        .call(colorAxis);
         
     svg.selectAll("rect")
         .data(data.monthlyVariance)
@@ -82,39 +99,6 @@ const drawCahrt = (data) => {
         .attr("id", "y-axis")
         .attr("transform", `translate(${paddingX}, ${0})`)
         .call(yAxis);
-    
-//     const legendContainer = svg.append('g').attr('id', 'legend');
-
-//     const legend = legendContainer
-//           .selectAll('#legend')
-//           .data(color.domain())
-//           .enter()
-//           .append('g')
-//           .attr('class', 'legend-label')
-//           .attr('transform', function (d, i) {
-//             return 'translate(0,' + (h / 2 - i * 20) + ')';
-//           });
-    
-//         legend
-//           .append('rect')
-//           .attr('x', w - 18)
-//           .attr('width', 18)
-//           .attr('height', 18)
-//           .style('fill', color);
-    
-//         legend
-//           .append('text')
-//           .attr('x', w - 24)
-//           .attr('y', 9)
-//           .attr('dy', '.35em')
-//           .style('text-anchor', 'end')
-//           .text(function (d) {
-//             if (d) {
-//               return 'Riders with doping allegations';
-//             } else {
-//               return 'No doping allegations';
-//             }
-//           });
 
     d3.select(".heatmap")
         .append("div")

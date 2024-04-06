@@ -8,7 +8,7 @@ const drawCahrt = (data) => {
     const w = 1000;
     const h = 500;
     const paddingX = 60;
-    const paddingY = 40;
+    const paddingY = 50;
     const width = 5;
     const height = (h-2*paddingY) / 12;
     const baseTemp = data.baseTemperature;

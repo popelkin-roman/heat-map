@@ -7,9 +7,10 @@ const data = fetch(dataurl)
 const drawCahrt = (data) => {
     const w = 1000;
     const h = 500;
-    const padding = 50;
+    const paddingX = 60;
+    const paddingY = 40;
     const width = 5;
-    const height = (h-2*padding) / 12;
+    const height = (h-2*paddingY) / 12;
     const baseTemp = data.baseTemperature;
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     const color = d3.scaleSequential(d3.interpolateTurbo);
@@ -23,10 +24,10 @@ const drawCahrt = (data) => {
     console.log(minTemp,maxTemp);
     const scaleYear = d3.scaleTime()
         .domain([minYear, maxYear])
-        .range([padding, w - padding]);
+        .range([paddingX, w - paddingX]);
     const scaleMonth = d3.scaleBand()
         .domain(months)
-        .range([padding, h - padding]);
+        .range([paddingY, h - paddingY]);
         
     const svg = d3.select(".heatmap")
         .append("svg")
@@ -38,12 +39,12 @@ const drawCahrt = (data) => {
         .enter()
         .append("rect")
         .attr("x", (d) => scaleYear(new Date(d.year, 0, 1)) )
-        .attr("y", (d) => (d.month -1)*height)
+        .attr("y", (d) => paddingY + (d.month -1)*height)
         .attr("width", width)
         .attr("height", height)
         .attr("class", "cell")
         .attr("data-year", d => d.year)
-        .attr("data-month", d =>  d.month)
+        .attr("data-month", d =>  d.month-1)
         .attr("data-temp", d => (baseTemp + d.variance).toFixed(2))
         .style("fill", d=> color((d.variance - minTemp)/(maxTemp-minTemp)))
         .on("mouseover", (e, d) => {
@@ -62,7 +63,7 @@ const drawCahrt = (data) => {
             tooltip.append("div")
                 .text( (baseTemp + d.variance).toFixed(2) + " ℃")
         })
-        .on("mouseout", (e,d) => {
+        .on("mouseout", (e) => {
             e.target.style.fill = currentCellColor;
             d3.select("#tooltip")
                 .style("visibility", "hidden")
@@ -70,18 +71,17 @@ const drawCahrt = (data) => {
             
         })
     
-//     const xAxis = d3.axisBottom(scaleYear);
-//     const yAxis = d3.axisLeft(scaleMonth)
-//         .tickFormat(d3.timeFormat("%M:%S"));
-//     const xAxisLine = svg.append("g")
-//         .attr("id", "x-axis")
-//         .attr("transform", `translate(${0}, ${h - padding})`)
-//         .call(xAxis);
+    const xAxis = d3.axisBottom(scaleYear);
+    const yAxis = d3.axisLeft(scaleMonth);
+    const xAxisLine = svg.append("g")
+        .attr("id", "x-axis")
+        .attr("transform", `translate(${0}, ${h - paddingY})`)
+        .call(xAxis);
 
-//     const yAxisLine = svg.append("g")
-//         .attr("id", "y-axis")
-//         .attr("transform", `translate(${padding}, ${0})`)
-//         .call(yAxis);
+    const yAxisLine = svg.append("g")
+        .attr("id", "y-axis")
+        .attr("transform", `translate(${paddingX}, ${0})`)
+        .call(yAxis);
     
 //     const legendContainer = svg.append('g').attr('id', 'legend');
 

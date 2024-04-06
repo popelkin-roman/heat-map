@@ -4,61 +4,74 @@ const data = fetch(dataurl)
                 .then((res) => res.json())
                 .then(data => drawCahrt(data));
 
-// const drawCahrt = (data) => {
-//     const w = 1000;
-//     const h = 500;
-//     const padding = 50;
-//     const color = d3.scaleOrdinal(d3.schemeDark2);
-//     const minYear = new Date(0).setFullYear(d3.min(data, d => d.Year - 1));
-//     const maxYear = new Date(0).setFullYear(d3.max(data, d => d.Year + 1));
-//     const minTime = new Date("2000-01-01T00:"+ d3.min(data, d => d.Time));
-//     const maxTime = new Date("2000-01-01T00:" + d3.max(data, d => d.Time));
-
-//     const scaleYear = d3.scaleTime()
-//         .domain([minYear, maxYear])
-//         .range([padding, w - padding]);
-//     const scaleTime = d3.scaleTime()
-//         .domain([minTime, maxTime])
-//         .range([padding, h - padding]);
+const drawCahrt = (data) => {
+    const w = 1000;
+    const h = 500;
+    const padding = 50;
+    const width = 5;
+    const height = (h-2*padding) / 12;
+    const baseTemp = data.baseTemperature;
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    const color = d3.scaleSequential(d3.interpolateTurbo);
+    let currentCellColor = '';
+    const minYear = new Date(data.monthlyVariance[0].year, data.monthlyVariance[0].month);
+    const maxYear = new Date(
+      data.monthlyVariance[data.monthlyVariance.length - 1].year,
+      data.monthlyVariance[data.monthlyVariance.length - 1].month);
+    const minTemp = d3.min(data.monthlyVariance, d=>d.variance);
+    const maxTemp = d3.max(data.monthlyVariance, d=>d.variance);
+    console.log(minTemp,maxTemp);
+    const scaleYear = d3.scaleTime()
+        .domain([minYear, maxYear])
+        .range([padding, w - padding]);
+    const scaleMonth = d3.scaleBand()
+        .domain(months)
+        .range([padding, h - padding]);
         
-//     const svg = d3.select(".scatterplot")
-//         .append("svg")
-//         .attr("width", w)
-//         .attr("height", h);
+    const svg = d3.select(".heatmap")
+        .append("svg")
+        .attr("width", w)
+        .attr("height", h);
         
-//     svg.selectAll("circle")
-//         .data(data)
-//         .enter()
-//         .append("circle")
-//         .attr("cx", (d) => scaleYear(new Date(0).setFullYear(d.Year)) )
-//         .attr("cy", (d) => scaleTime(new Date("2000-01-01T00:" + d.Time)))
-//         .attr("r", 5)
-//         .attr("class", "dot")
-//         .attr("data-xvalue", d => d.Year)
-//         .attr("data-yvalue", d => new Date("2000-01-01T00:" + d.Time))
-//         .style("fill", d=> color(d.Doping !== ''))
-//         .on("mouseover", (e, d) => {
-//             e.target.style.fill = "#aaa";
-//             const tooltip = d3.select("#tooltip")
-//                 .attr("data-year", d.Year)
-//                 .attr("data-time", d.Time)
-//                 .style("visibility", "visible")
-//                 .style("transform", `translateX(${e.clientX}px) translateY(${e.clientY}px)`)
-//             tooltip.append("div")
-//                 .text(d.Year)
-//             tooltip.append("div")
-//                 .text(d.Time)
-//         })
-//         .on("mouseout", (e,d) => {
-//             e.target.style.fill = color(d.Doping !== '');
-//             d3.select("#tooltip")
-//                 .style("visibility", "hidden")
-//                 .text("");
+    svg.selectAll("rect")
+        .data(data.monthlyVariance)
+        .enter()
+        .append("rect")
+        .attr("x", (d) => scaleYear(new Date(d.year, 0, 1)) )
+        .attr("y", (d) => (d.month -1)*height)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("class", "cell")
+        .attr("data-year", d => d.year)
+        .attr("data-month", d =>  d.month)
+        .attr("data-temp", d => (baseTemp + d.variance).toFixed(2))
+        .style("fill", d=> color((d.variance - minTemp)/(maxTemp-minTemp)))
+        .on("mouseover", (e, d) => {
+          currentCellColor = e.target.style.fill;
+            e.target.style.fill = "#aaa";
+            const tooltip = d3.select("#tooltip")
+                .attr("data-year", d.year)
+                .attr("data-month", d.month)
+                .attr("data-temp", d.variance)
+                .style("visibility", "visible")
+                .style("transform", `translateX(${e.clientX}px) translateY(${e.clientY}px)`)
+            tooltip.append("div")
+                .text(d.year)
+            tooltip.append("div")
+                .text(months[d.month-1])
+            tooltip.append("div")
+                .text( (baseTemp + d.variance).toFixed(2) + " ℃")
+        })
+        .on("mouseout", (e,d) => {
+            e.target.style.fill = currentCellColor;
+            d3.select("#tooltip")
+                .style("visibility", "hidden")
+                .text("");
             
-//         })
+        })
     
 //     const xAxis = d3.axisBottom(scaleYear);
-//     const yAxis = d3.axisLeft(scaleTime)
+//     const yAxis = d3.axisLeft(scaleMonth)
 //         .tickFormat(d3.timeFormat("%M:%S"));
 //     const xAxisLine = svg.append("g")
 //         .attr("id", "x-axis")
@@ -103,8 +116,8 @@ const data = fetch(dataurl)
 //             }
 //           });
 
-//     d3.select(".scatterplot")
-//         .append("div")
-//         .attr("id", "tooltip")
-//         .style("visibility", "hidden");
-// }
+    d3.select(".heatmap")
+        .append("div")
+        .attr("id", "tooltip")
+        .style("visibility", "hidden");
+}
